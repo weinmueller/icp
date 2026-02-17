@@ -1,0 +1,14 @@
+identity 2 0.0104662
+pure_translation 2 0.0101841
+pure_rotation 2 0.00979519
+rotation_and_translation 2 0.00967088
+convergence_error 2 0.00954086
+translation_only 2 0.00909523
+with_scaling 2 0.00802449
+no_rotation_no_translation 2 0.00711365
+load 2 0.00567553
+load_translated 2 0.00466514
+roundtrip 2 0.00371266
+load_missing_file 2 0.0027649
+file_translation 2 0.00235841
+---
