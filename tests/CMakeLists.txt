@@ -25,6 +25,16 @@ icp_add_test(translation_only           test_icp  "settings")
 icp_add_test(with_scaling               test_icp  "settings")
 icp_add_test(no_rotation_no_translation test_icp  "settings")
 
+# --- method tests ---
+icp_add_test(point_to_plane                   test_icp  "method")
+icp_add_test(plane_to_plane                   test_icp  "method")
+icp_add_test(point_to_plane_vs_point_to_point test_icp  "method")
+
+# --- kdtree tests ---
+icp_add_test(kdtree_translation         test_icp  "kdtree")
+icp_add_test(kdtree_rotation            test_icp  "kdtree")
+icp_add_test(kdtree_vs_bruteforce       test_icp  "kdtree")
+
 # ─── test_pointcloud_io: file I/O tests ─────────────────────────────────
 add_executable(test_pointcloud_io test_pointcloud_io.cpp)
 target_link_libraries(test_pointcloud_io icp)

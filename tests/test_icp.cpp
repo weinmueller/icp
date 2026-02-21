@@ -142,6 +142,150 @@ int test_with_scaling() {
     return 0;
 }
 
+int test_kdtree_translation() {
+    auto target = make_points();
+    Eigen::Vector3d t(2.0, -1.0, 0.5);
+    auto source = apply_transform(target, Eigen::Matrix3d::Identity(), -t);
+
+    ICPSettings settings;
+    settings.nn_method = NNMethod::KDTree;
+    auto res = icp(source, target, settings);
+
+    for (int i = 0; i < 3; ++i)
+        ASSERT_NEAR(res.translation(i), t(i), 1e-4);
+    return 0;
+}
+
+int test_kdtree_rotation() {
+    auto target = make_points();
+    double angle = M_PI / 6;
+    Eigen::Matrix3d R;
+    R = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
+
+    auto source = apply_transform(target, R.transpose(), Eigen::Vector3d::Zero());
+
+    ICPSettings settings;
+    settings.nn_method = NNMethod::KDTree;
+    auto res = icp(source, target, settings);
+
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+            ASSERT_NEAR(res.rotation(i, j), R(i, j), 1e-4);
+    return 0;
+}
+
+int test_kdtree_vs_bruteforce() {
+    auto target = make_points();
+    Eigen::Vector3d t(0.3, 0.2, 0.1);
+    auto source = apply_transform(target, Eigen::Matrix3d::Identity(), -t);
+
+    ICPSettings bf_settings;
+    bf_settings.nn_method = NNMethod::BruteForce;
+    auto bf_res = icp(source, target, bf_settings);
+
+    ICPSettings kd_settings;
+    kd_settings.nn_method = NNMethod::KDTree;
+    auto kd_res = icp(source, target, kd_settings);
+
+    for (int i = 0; i < 3; ++i) {
+        ASSERT_NEAR(kd_res.translation(i), bf_res.translation(i), 1e-10);
+        for (int j = 0; j < 3; ++j)
+            ASSERT_NEAR(kd_res.rotation(i, j), bf_res.rotation(i, j), 1e-10);
+    }
+    ASSERT_NEAR(kd_res.error, bf_res.error, 1e-10);
+    return 0;
+}
+
+// Generate points on a hemisphere for plane-based ICP tests (varied normals)
+static std::vector<Eigen::Vector3d> make_hemisphere_points() {
+    std::vector<Eigen::Vector3d> pts;
+    double r = 2.0;
+    for (int i = 0; i <= 8; ++i) {
+        double phi = M_PI / 2.0 * i / 8.0; // 0 to pi/2
+        int n_theta = std::max(1, static_cast<int>(8 * std::sin(phi)));
+        for (int j = 0; j < n_theta; ++j) {
+            double theta = 2.0 * M_PI * j / n_theta;
+            double x = r * std::sin(phi) * std::cos(theta);
+            double y = r * std::sin(phi) * std::sin(theta);
+            double z = r * std::cos(phi);
+            pts.push_back({x, y, z});
+        }
+    }
+    return pts;
+}
+
+int test_point_to_plane() {
+    auto target = make_hemisphere_points();
+    double angle = M_PI / 12; // 15 degrees
+    Eigen::Matrix3d R;
+    R = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
+    Eigen::Vector3d t(0.3, 0.2, 0.1);
+
+    auto source = apply_transform(target, R.transpose(), -R.transpose() * t);
+
+    ICPSettings settings;
+    settings.method = ICPMethod::PointToPlane;
+    settings.max_iterations = 100;
+    auto res = icp(source, target, settings);
+
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+            ASSERT_NEAR(res.rotation(i, j), R(i, j), 1e-3);
+
+    for (int i = 0; i < 3; ++i)
+        ASSERT_NEAR(res.translation(i), t(i), 1e-3);
+    return 0;
+}
+
+int test_plane_to_plane() {
+    auto target = make_hemisphere_points();
+    double angle = M_PI / 12;
+    Eigen::Matrix3d R;
+    R = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
+    Eigen::Vector3d t(0.3, 0.2, 0.1);
+
+    auto source = apply_transform(target, R.transpose(), -R.transpose() * t);
+
+    ICPSettings settings;
+    settings.method = ICPMethod::PlaneToPlane;
+    settings.max_iterations = 100;
+    auto res = icp(source, target, settings);
+
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j)
+            ASSERT_NEAR(res.rotation(i, j), R(i, j), 1e-3);
+
+    for (int i = 0; i < 3; ++i)
+        ASSERT_NEAR(res.translation(i), t(i), 1e-3);
+    return 0;
+}
+
+int test_point_to_plane_vs_point_to_point() {
+    auto target = make_hemisphere_points();
+    Eigen::Vector3d t(0.2, 0.1, 0.05);
+
+    auto source = apply_transform(target, Eigen::Matrix3d::Identity(), -t);
+
+    ICPSettings p2point;
+    p2point.method = ICPMethod::PointToPoint;
+    p2point.max_iterations = 100;
+    auto res1 = icp(source, target, p2point);
+
+    ICPSettings p2plane;
+    p2plane.method = ICPMethod::PointToPlane;
+    p2plane.max_iterations = 100;
+    auto res2 = icp(source, target, p2plane);
+
+    // Both should converge to the same translation
+    for (int i = 0; i < 3; ++i)
+        ASSERT_NEAR(res1.translation(i), res2.translation(i), 1e-2);
+
+    // Both should achieve near-zero error
+    ASSERT_NEAR(res1.error, 0.0, 1e-4);
+    ASSERT_NEAR(res2.error, 0.0, 1e-4);
+    return 0;
+}
+
 int test_no_rotation_no_translation() {
     auto pts = make_points();
     Eigen::Vector3d t(0.5, 0.5, 0.5);
@@ -174,7 +318,13 @@ static const TestEntry tests[] = {
     {"convergence_error",          test_convergence_error},
     {"translation_only",           test_translation_only},
     {"with_scaling",               test_with_scaling},
-    {"no_rotation_no_translation", test_no_rotation_no_translation},
+    {"no_rotation_no_translation",         test_no_rotation_no_translation},
+    {"point_to_plane",                     test_point_to_plane},
+    {"plane_to_plane",                     test_plane_to_plane},
+    {"point_to_plane_vs_point_to_point",   test_point_to_plane_vs_point_to_point},
+    {"kdtree_translation",                 test_kdtree_translation},
+    {"kdtree_rotation",            test_kdtree_rotation},
+    {"kdtree_vs_bruteforce",       test_kdtree_vs_bruteforce},
 };
 
 int main(int argc, char* argv[]) {

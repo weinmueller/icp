@@ -1,220 +1,54 @@
-Start testing: Feb 17 20:48 CET
+Start testing: Feb 21 17:12 CET
 ----------------------------------------------------------
-1/13 Testing: identity
-1/13 Test: identity
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "identity"
+9/19 Testing: point_to_plane
+9/19 Test: point_to_plane
+Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "point_to_plane"
 Directory: /home/pascal/Coding/claude/icp/build/tests
-"identity" start time: Feb 17 20:48 CET
+"point_to_plane" start time: Feb 21 17:12 CET
 Output:
 ----------------------------------------------------------
-identity: PASS
+point_to_plane: PASS
 <end of output>
-Test time =   0.01 sec
+Test time =   0.02 sec
 ----------------------------------------------------------
 Test Passed.
-"identity" end time: Feb 17 20:48 CET
-"identity" time elapsed: 00:00:00
+"point_to_plane" end time: Feb 21 17:12 CET
+"point_to_plane" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-2/13 Testing: pure_translation
-2/13 Test: pure_translation
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "pure_translation"
+10/19 Testing: plane_to_plane
+10/19 Test: plane_to_plane
+Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "plane_to_plane"
 Directory: /home/pascal/Coding/claude/icp/build/tests
-"pure_translation" start time: Feb 17 20:48 CET
+"plane_to_plane" start time: Feb 21 17:12 CET
 Output:
 ----------------------------------------------------------
-pure_translation: PASS
+plane_to_plane: PASS
 <end of output>
-Test time =   0.01 sec
+Test time =   0.03 sec
 ----------------------------------------------------------
 Test Passed.
-"pure_translation" end time: Feb 17 20:48 CET
-"pure_translation" time elapsed: 00:00:00
+"plane_to_plane" end time: Feb 21 17:12 CET
+"plane_to_plane" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-3/13 Testing: pure_rotation
-3/13 Test: pure_rotation
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "pure_rotation"
+11/19 Testing: point_to_plane_vs_point_to_point
+11/19 Test: point_to_plane_vs_point_to_point
+Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "point_to_plane_vs_point_to_point"
 Directory: /home/pascal/Coding/claude/icp/build/tests
-"pure_rotation" start time: Feb 17 20:48 CET
+"point_to_plane_vs_point_to_point" start time: Feb 21 17:12 CET
 Output:
 ----------------------------------------------------------
-pure_rotation: PASS
+point_to_plane_vs_point_to_point: PASS
 <end of output>
-Test time =   0.01 sec
+Test time =   0.02 sec
 ----------------------------------------------------------
 Test Passed.
-"pure_rotation" end time: Feb 17 20:48 CET
-"pure_rotation" time elapsed: 00:00:00
+"point_to_plane_vs_point_to_point" end time: Feb 21 17:12 CET
+"point_to_plane_vs_point_to_point" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-4/13 Testing: rotation_and_translation
-4/13 Test: rotation_and_translation
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "rotation_and_translation"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"rotation_and_translation" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-rotation_and_translation: PASS
-<end of output>
-Test time =   0.01 sec
-----------------------------------------------------------
-Test Passed.
-"rotation_and_translation" end time: Feb 17 20:48 CET
-"rotation_and_translation" time elapsed: 00:00:00
-----------------------------------------------------------
+End testing: Feb 21 17:12 CET
 
-5/13 Testing: convergence_error
-5/13 Test: convergence_error
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "convergence_error"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"convergence_error" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-convergence_error: PASS
-<end of output>
-Test time =   0.01 sec
-----------------------------------------------------------
-Test Passed.
-"convergence_error" end time: Feb 17 20:48 CET
-"convergence_error" time elapsed: 00:00:00
-----------------------------------------------------------
-
-6/13 Testing: translation_only
-6/13 Test: translation_only
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "translation_only"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"translation_only" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-translation_only: PASS
-<end of output>
-Test time =   0.01 sec
-----------------------------------------------------------
-Test Passed.
-"translation_only" end time: Feb 17 20:48 CET
-"translation_only" time elapsed: 00:00:00
-----------------------------------------------------------
-
-7/13 Testing: with_scaling
-7/13 Test: with_scaling
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "with_scaling"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"with_scaling" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-with_scaling: PASS
-<end of output>
-Test time =   0.01 sec
-----------------------------------------------------------
-Test Passed.
-"with_scaling" end time: Feb 17 20:48 CET
-"with_scaling" time elapsed: 00:00:00
-----------------------------------------------------------
-
-8/13 Testing: no_rotation_no_translation
-8/13 Test: no_rotation_no_translation
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_icp" "no_rotation_no_translation"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"no_rotation_no_translation" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-no_rotation_no_translation: PASS
-<end of output>
-Test time =   0.01 sec
-----------------------------------------------------------
-Test Passed.
-"no_rotation_no_translation" end time: Feb 17 20:48 CET
-"no_rotation_no_translation" time elapsed: 00:00:00
-----------------------------------------------------------
-
-9/13 Testing: load
-9/13 Test: load
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_pointcloud_io" "load"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"load" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-load: PASS
-<end of output>
-Test time =   0.00 sec
-----------------------------------------------------------
-Test Passed.
-"load" end time: Feb 17 20:48 CET
-"load" time elapsed: 00:00:00
-----------------------------------------------------------
-
-10/13 Testing: load_translated
-10/13 Test: load_translated
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_pointcloud_io" "load_translated"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"load_translated" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-load_translated: PASS
-<end of output>
-Test time =   0.00 sec
-----------------------------------------------------------
-Test Passed.
-"load_translated" end time: Feb 17 20:48 CET
-"load_translated" time elapsed: 00:00:00
-----------------------------------------------------------
-
-11/13 Testing: roundtrip
-11/13 Test: roundtrip
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_pointcloud_io" "roundtrip"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"roundtrip" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-roundtrip: PASS
-<end of output>
-Test time =   0.00 sec
-----------------------------------------------------------
-Test Passed.
-"roundtrip" end time: Feb 17 20:48 CET
-"roundtrip" time elapsed: 00:00:00
-----------------------------------------------------------
-
-12/13 Testing: load_missing_file
-12/13 Test: load_missing_file
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_pointcloud_io" "load_missing_file"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"load_missing_file" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-load_missing_file: PASS
-<end of output>
-Test time =   0.00 sec
-----------------------------------------------------------
-Test Passed.
-"load_missing_file" end time: Feb 17 20:48 CET
-"load_missing_file" time elapsed: 00:00:00
-----------------------------------------------------------
-
-13/13 Testing: file_translation
-13/13 Test: file_translation
-Command: "/home/pascal/Coding/claude/icp/build/tests/test_file_icp" "file_translation"
-Directory: /home/pascal/Coding/claude/icp/build/tests
-"file_translation" start time: Feb 17 20:48 CET
-Output:
-----------------------------------------------------------
-file_translation: PASS
-<end of output>
-Test time =   0.00 sec
-----------------------------------------------------------
-Test Passed.
-"file_translation" end time: Feb 17 20:48 CET
-"file_translation" time elapsed: 00:00:00
-----------------------------------------------------------
-
-End testing: Feb 17 20:48 CET
-
-fileio =   0.01 sec*proc
-
-integration =   0.00 sec*proc
-
-rigid =   0.03 sec*proc
-
-settings =   0.02 sec*proc
+method =   0.07 sec*proc
 

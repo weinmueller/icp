@@ -1,7 +1,10 @@
 #include "icp.h"
+#include "kdtree.h"
+#include "normals.h"
+#include <cmath>
 #include <limits>
 
-static std::vector<int> find_closest_points(
+static std::vector<int> find_closest_brute(
     const std::vector<Eigen::Vector3d>& src,
     const std::vector<Eigen::Vector3d>& tgt)
 {
@@ -19,6 +22,29 @@ static std::vector<int> find_closest_points(
         indices[i] = best_idx;
     }
     return indices;
+}
+
+static std::vector<int> find_closest_kdtree(
+    const std::vector<Eigen::Vector3d>& src,
+    const std::vector<Eigen::Vector3d>& tgt)
+{
+    KDTree tree(tgt);
+    std::vector<int> indices(src.size());
+    for (size_t i = 0; i < src.size(); ++i)
+        indices[i] = tree.nearest(src[i]);
+    return indices;
+}
+
+static std::vector<int> find_closest_points(
+    const std::vector<Eigen::Vector3d>& src,
+    const std::vector<Eigen::Vector3d>& tgt,
+    NNMethod method)
+{
+    switch (method) {
+        case NNMethod::KDTree:     return find_closest_kdtree(src, tgt);
+        case NNMethod::BruteForce: return find_closest_brute(src, tgt);
+    }
+    return find_closest_brute(src, tgt);
 }
 
 static void compute_transform(
@@ -74,17 +100,139 @@ static void compute_transform(
     }
 }
 
+// Point-to-plane: linearized least-squares using small-angle approximation.
+// Solves for x = [rx, ry, rz, tx, ty, tz] minimizing sum_i ((R*si + t - ti) . ni)^2
+static void compute_transform_point_to_plane(
+    const std::vector<Eigen::Vector3d>& src,
+    const std::vector<Eigen::Vector3d>& tgt,
+    const std::vector<int>& correspondences,
+    const std::vector<Eigen::Vector3d>& tgt_normals,
+    Eigen::Matrix3d& R, Eigen::Vector3d& t)
+{
+    const size_t n = src.size();
+    R = Eigen::Matrix3d::Identity();
+    t = Eigen::Vector3d::Zero();
+
+    Eigen::Matrix<double, 6, 6> ATA = Eigen::Matrix<double, 6, 6>::Zero();
+    Eigen::Matrix<double, 6, 1> ATb = Eigen::Matrix<double, 6, 1>::Zero();
+
+    for (size_t i = 0; i < n; ++i) {
+        const Eigen::Vector3d& s = src[i];
+        const Eigen::Vector3d& ti = tgt[correspondences[i]];
+        const Eigen::Vector3d& ni = tgt_normals[correspondences[i]];
+
+        // a = [s x n, n] (cross product of source point with normal, then normal)
+        Eigen::Matrix<double, 6, 1> a;
+        a.head<3>() = s.cross(ni);
+        a.tail<3>() = ni;
+
+        double b = (ti - s).dot(ni);
+
+        ATA += a * a.transpose();
+        ATb += a * b;
+    }
+
+    Eigen::Matrix<double, 6, 1> x = ATA.ldlt().solve(ATb);
+
+    double rx = x(0), ry = x(1), rz = x(2);
+    t = x.tail<3>();
+
+    // Small-angle rotation matrix
+    R << 1.0,  -rz,   ry,
+         rz,   1.0,  -rx,
+        -ry,   rx,   1.0;
+
+    // Re-orthogonalize via SVD
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(R, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    R = svd.matrixU() * svd.matrixV().transpose();
+    if (R.determinant() < 0) {
+        Eigen::Matrix3d U = svd.matrixU();
+        U.col(2) *= -1;
+        R = U * svd.matrixV().transpose();
+    }
+}
+
+// Plane-to-plane (symmetric ICP): uses normals from both clouds.
+// Combined normal n_i = n_source_i + n_target_i
+static void compute_transform_plane_to_plane(
+    const std::vector<Eigen::Vector3d>& src,
+    const std::vector<Eigen::Vector3d>& tgt,
+    const std::vector<int>& correspondences,
+    const std::vector<Eigen::Vector3d>& src_normals,
+    const std::vector<Eigen::Vector3d>& tgt_normals,
+    Eigen::Matrix3d& R, Eigen::Vector3d& t)
+{
+    const size_t n = src.size();
+    R = Eigen::Matrix3d::Identity();
+    t = Eigen::Vector3d::Zero();
+
+    Eigen::Matrix<double, 6, 6> ATA = Eigen::Matrix<double, 6, 6>::Zero();
+    Eigen::Matrix<double, 6, 1> ATb = Eigen::Matrix<double, 6, 1>::Zero();
+
+    for (size_t i = 0; i < n; ++i) {
+        const Eigen::Vector3d& si = src[i];
+        const Eigen::Vector3d& ti = tgt[correspondences[i]];
+        const Eigen::Vector3d& ns = src_normals[i];
+        const Eigen::Vector3d& nt = tgt_normals[correspondences[i]];
+
+        Eigen::Vector3d ni = (ns + nt).normalized();
+
+        Eigen::Matrix<double, 6, 1> a;
+        a.head<3>() = si.cross(ni);
+        a.tail<3>() = ni;
+
+        double b = (ti - si).dot(ni);
+
+        ATA += a * a.transpose();
+        ATb += a * b;
+    }
+
+    Eigen::Matrix<double, 6, 1> x = ATA.ldlt().solve(ATb);
+
+    double rx = x(0), ry = x(1), rz = x(2);
+    t = x.tail<3>();
+
+    R << 1.0,  -rz,   ry,
+         rz,   1.0,  -rx,
+        -ry,   rx,   1.0;
+
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(R, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    R = svd.matrixU() * svd.matrixV().transpose();
+    if (R.determinant() < 0) {
+        Eigen::Matrix3d U = svd.matrixU();
+        U.col(2) *= -1;
+        R = U * svd.matrixV().transpose();
+    }
+}
+
 ICPResult icp(const std::vector<Eigen::Vector3d>& source,
               const std::vector<Eigen::Vector3d>& target,
-              const ICPSettings& settings)
+              const ICPSettings& settings,
+              const std::vector<Eigen::Vector3d>& source_normals,
+              const std::vector<Eigen::Vector3d>& target_normals)
 {
     ICPResult result;
     std::vector<Eigen::Vector3d> current = source;
 
+    // Auto-estimate normals if needed
+    std::vector<Eigen::Vector3d> src_normals = source_normals;
+    std::vector<Eigen::Vector3d> tgt_normals = target_normals;
+
+    if (settings.method == ICPMethod::PointToPlane ||
+        settings.method == ICPMethod::PlaneToPlane) {
+        if (tgt_normals.empty())
+            tgt_normals = estimate_normals(target);
+        if (settings.method == ICPMethod::PlaneToPlane && src_normals.empty())
+            src_normals = estimate_normals(source);
+    }
+
+    // For plane methods, keep a mutable copy of source normals to rotate
+    std::vector<Eigen::Vector3d> current_src_normals = src_normals;
+
     double prev_error = std::numeric_limits<double>::max();
 
     for (int iter = 0; iter < settings.max_iterations; ++iter) {
-        auto correspondences = find_closest_points(current, target);
+        auto correspondences = find_closest_points(current, target, settings.nn_method);
 
         double error = 0.0;
         for (size_t i = 0; i < current.size(); ++i)
@@ -100,16 +248,35 @@ ICPResult icp(const std::vector<Eigen::Vector3d>& source,
 
         Eigen::Matrix3d R;
         Eigen::Vector3d t;
-        double s;
-        compute_transform(current, target, correspondences, settings, R, t, s);
+        double s = 1.0;
 
-        // Accumulate transform
+        switch (settings.method) {
+        case ICPMethod::PointToPoint:
+            compute_transform(current, target, correspondences, settings, R, t, s);
+            break;
+        case ICPMethod::PointToPlane:
+            compute_transform_point_to_plane(
+                current, target, correspondences, tgt_normals, R, t);
+            break;
+        case ICPMethod::PlaneToPlane:
+            compute_transform_plane_to_plane(
+                current, target, correspondences,
+                current_src_normals, tgt_normals, R, t);
+            break;
+        }
+
         result.rotation = R * result.rotation;
         result.translation = s * R * result.translation + t;
         result.scale *= s;
 
         for (auto& p : current)
             p = s * R * p + t;
+
+        // Rotate source normals for plane-to-plane
+        if (settings.method == ICPMethod::PlaneToPlane) {
+            for (auto& n : current_src_normals)
+                n = R * n;
+        }
 
         result.iterations = iter + 1;
         result.error = error;
