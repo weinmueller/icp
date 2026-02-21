@@ -1,5 +1,7 @@
 # ICP — Iterative Closest Point Registration
 
+[![CI](https://github.com/weinmueller/icp/actions/workflows/ci.yml/badge.svg)](https://github.com/weinmueller/icp/actions/workflows/ci.yml)
+
 Minimal C++ implementation of the ICP algorithm for 3D rigid point-set registration using Eigen.
 
 ## Features
