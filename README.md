@@ -150,8 +150,11 @@ An interactive OpenGL viewer is built automatically if GLFW is installed:
 sudo apt install libglfw3-dev
 
 cmake -B build && cmake --build build
-./build/examples/viewer
+./build/examples/viewer         # standalone viewer
+./build/examples/demo --viewer  # run demo then open viewer
 ```
+
+The `--viewer` flag runs all three ICP methods, collects iteration snapshots, and opens the viewer window. If GLFW was not found at build time, `--viewer` prints an error. Without the flag, `demo` behaves as a normal CLI program.
 
 Controls:
 

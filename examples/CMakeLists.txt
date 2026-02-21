@@ -5,6 +5,8 @@ find_package(glfw3 QUIET)
 find_package(OpenGL QUIET)
 
 if(glfw3_FOUND AND OpenGL_FOUND)
+    target_link_libraries(demo glfw OpenGL::GL)
+
     add_executable(viewer viewer.cpp)
     target_link_libraries(viewer icp glfw OpenGL::GL)
 else()
