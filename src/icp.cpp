@@ -233,6 +233,15 @@ ICPResult icp(const std::vector<Eigen::Vector3d>& source,
             error += (current[i] - target[correspondences[i]]).squaredNorm();
         error /= static_cast<double>(current.size());
 
+        if (settings.iteration_callback) {
+            ICPIterationData data;
+            data.iteration = iter;
+            data.error = error;
+            data.source_points = current;
+            data.correspondences = correspondences;
+            settings.iteration_callback(data);
+        }
+
         if (std::abs(prev_error - error) < settings.tolerance) {
             result.error = error;
             result.iterations = iter;

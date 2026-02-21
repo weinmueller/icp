@@ -127,6 +127,43 @@ ctest --test-dir build --output-on-failure        # show output on failure
 
 To add your own test data, place `.xyz` files in `tests/data/` and register new test cases in `tests/CMakeLists.txt` via `icp_add_test()`.
 
+## Iteration Callback
+
+You can attach a callback to observe each ICP iteration (useful for debugging or visualization):
+
+```cpp
+ICPSettings settings;
+settings.iteration_callback = [](const ICPIterationData& data) {
+    std::printf("iter %d: error=%.4e\n", data.iteration, data.error);
+    // data.source_points — current transformed positions
+    // data.correspondences — nearest-neighbor indices into target
+};
+icp(source, target, settings);
+```
+
+## Viewer
+
+An interactive OpenGL viewer is built automatically if GLFW is installed:
+
+```bash
+# Install GLFW (Ubuntu/Debian)
+sudo apt install libglfw3-dev
+
+cmake -B build && cmake --build build
+./build/examples/viewer
+```
+
+Controls:
+
+| Key | Action |
+|---|---|
+| Left / Right | Step through iterations |
+| Space | Toggle auto-play |
+| Home / End | Jump to first / last iteration |
+| Mouse drag | Orbit camera |
+| Scroll | Zoom |
+| Q / Escape | Quit |
+
 ## Project Structure
 
 ```
@@ -137,6 +174,10 @@ To add your own test data, place `.xyz` files in `tests/data/` and register new 
 │   ├── kdtree.h                  # Minimal 3D KD-tree (nearest + k-nearest)
 │   ├── normals.h                 # Surface normal estimation via PCA
 │   └── pointcloud_io.h / .cpp   # Point cloud file I/O
+├── examples/
+│   ├── CMakeLists.txt
+│   ├── demo.cpp                  # CLI demo (all three ICP methods)
+│   └── viewer.cpp                # Interactive OpenGL viewer (requires GLFW)
 └── tests/
     ├── CMakeLists.txt
     ├── test_icp.cpp              # Algorithm + KD-tree tests

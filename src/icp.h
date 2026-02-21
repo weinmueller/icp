@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <functional>
 #include <vector>
 
 enum class NNMethod {
@@ -14,6 +15,13 @@ enum class ICPMethod {
     PlaneToPlane,   // symmetric: uses normals from both clouds
 };
 
+struct ICPIterationData {
+    int iteration;
+    double error;
+    std::vector<Eigen::Vector3d> source_points;  // current transformed positions
+    std::vector<int> correspondences;
+};
+
 struct ICPSettings {
     bool rotation = true;
     bool translation = true;
@@ -22,6 +30,7 @@ struct ICPSettings {
     ICPMethod method = ICPMethod::PointToPoint;
     int max_iterations = 50;
     double tolerance = 1e-6;
+    std::function<void(const ICPIterationData&)> iteration_callback;
 };
 
 struct ICPResult {
