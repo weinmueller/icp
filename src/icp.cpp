@@ -214,20 +214,14 @@ ICPResult icp(const std::vector<Eigen::Vector3d>& source,
     ICPResult result;
     std::vector<Eigen::Vector3d> current = source;
 
-    // Auto-estimate normals if needed
-    std::vector<Eigen::Vector3d> src_normals = source_normals;
+    // Auto-estimate target normals if needed
     std::vector<Eigen::Vector3d> tgt_normals = target_normals;
 
     if (settings.method == ICPMethod::PointToPlane ||
         settings.method == ICPMethod::PlaneToPlane) {
         if (tgt_normals.empty())
             tgt_normals = estimate_normals(target);
-        if (settings.method == ICPMethod::PlaneToPlane && src_normals.empty())
-            src_normals = estimate_normals(source);
     }
-
-    // For plane methods, keep a mutable copy of source normals to rotate
-    std::vector<Eigen::Vector3d> current_src_normals = src_normals;
 
     double prev_error = std::numeric_limits<double>::max();
 
@@ -258,11 +252,14 @@ ICPResult icp(const std::vector<Eigen::Vector3d>& source,
             compute_transform_point_to_plane(
                 current, target, correspondences, tgt_normals, R, t);
             break;
-        case ICPMethod::PlaneToPlane:
+        case ICPMethod::PlaneToPlane: {
+            // Re-estimate source normals from current points each iteration
+            auto current_src_normals = estimate_normals(current);
             compute_transform_plane_to_plane(
                 current, target, correspondences,
                 current_src_normals, tgt_normals, R, t);
             break;
+        }
         }
 
         result.rotation = R * result.rotation;
@@ -271,12 +268,6 @@ ICPResult icp(const std::vector<Eigen::Vector3d>& source,
 
         for (auto& p : current)
             p = s * R * p + t;
-
-        // Rotate source normals for plane-to-plane
-        if (settings.method == ICPMethod::PlaneToPlane) {
-            for (auto& n : current_src_normals)
-                n = R * n;
-        }
 
         result.iterations = iter + 1;
         result.error = error;

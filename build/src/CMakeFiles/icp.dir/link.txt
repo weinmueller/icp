@@ -1,2 +1,0 @@
-/usr/bin/ar qc libicp.a CMakeFiles/icp.dir/icp.cpp.o CMakeFiles/icp.dir/pointcloud_io.cpp.o
-/usr/bin/ranlib libicp.a

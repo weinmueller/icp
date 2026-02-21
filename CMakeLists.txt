@@ -7,5 +7,7 @@ find_package(Eigen3 REQUIRED)
 
 add_subdirectory(src)
 
+add_subdirectory(examples)
+
 enable_testing()
 add_subdirectory(tests)
